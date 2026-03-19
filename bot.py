@@ -5,8 +5,8 @@ import yfinance as yf
 import pandas as pd
 import matplotlib.pyplot as plt
 
-TOKEN = "PUT_YOUR_TOKEN_HERE"
-CHAT_ID = "PUT_CHAT_ID_HERE"
+TOKEN = "8478639537:AAG72tL0e_fFyv_RohAJnLmyW91hUNHgQDo"
+CHAT_ID = "545193335"
 
 bot = telebot.TeleBot(TOKEN)
 
