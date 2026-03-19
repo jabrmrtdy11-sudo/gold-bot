@@ -1,60 +1,50 @@
-import requests
 import time
-import telebot
-import yfinance as yf
 import pandas as pd
-import matplotlib.pyplot as plt
+import yfinance as yf
 
-TOKEN = "8478639537:AAG72tL0e_fFyv_RohAJnLmyW91hUNHgQDo"
-CHAT_ID = "545193335"
+# إعدادات
+symbol = "GC=F"  # الذهب
+interval = "1m"
 
-bot = telebot.TeleBot(TOKEN)
+def get_data():
+    data = yf.download(tickers=symbol, period="1d", interval=interval)
+    return data
 
-symbol = "GC=F"
+def calculate_ma(data):
+    data["MA20"] = data["Close"].rolling(window=20).mean()
+    data["MA50"] = data["Close"].rolling(window=50).mean()
+    return data
 
-def get_signal():
-    data = yf.download(symbol, period="1d", interval="5m")
-    
-    data["MA20"] = data["Close"].rolling(20).mean()
-    data["MA50"] = data["Close"].rolling(50).mean()
-    
+def check_signal(data):
     last = data.iloc[-1]
 
-    if last["MA20"].iloc[-1] > last["MA50"].iloc[-1]:
-        return "BUY", data
-    elif last["MA20"] < last["MA50"]:
-        return "SELL", data
+    ma20 = data["MA20"].iloc[-1]
+    ma50 = data["MA50"].iloc[-1]
+
+    if pd.isna(ma20) or pd.isna(ma50):
+        return "WAIT"
+
+    if ma20 > ma50:
+        return "BUY"
+    elif ma20 < ma50:
+        return "SELL"
     else:
-        return "WAIT", data
+        return "HOLD"
 
+def run_bot():
+    while True:
+        try:
+            data = get_data()
+            data = calculate_ma(data)
+            signal = check_signal(data)
 
-def send_chart(data, signal):
-    plt.figure(figsize=(8,4))
-    plt.plot(data["Close"], label="Price")
-    plt.plot(data["MA20"], label="MA20")
-    plt.plot(data["MA50"], label="MA50")
-    plt.legend()
+            print(f"Signal: {signal}")
 
-    file = "chart.png"
-    plt.savefig(file)
-    plt.close()
+            time.sleep(60)  # كل دقيقة
 
-    bot.send_photo(CHAT_ID, open(file,"rb"), caption=f"Signal: {signal}")
+        except Exception as e:
+            print(f"Error: {e}")
+            time.sleep(10)
 
-
-while True:
-    signal, data = get_signal()
-
-    message = f"""
-📊 GOLD SIGNAL
-
-Signal: {signal}
-Timeframe: M5
-Strategy: Moving Average
-"""
-
-    bot.send_message(CHAT_ID, message)
-
-    send_chart(data, signal)
-
-    time.sleep(300)
+if __name__ == "__main__":
+    run_bot()
