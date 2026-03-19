@@ -20,7 +20,7 @@ def get_signal():
     
     last = data.iloc[-1]
 
-    if last["MA20"] > last["MA50"]:
+    if last["MA20"].iloc[-1] > last["MA50"].iloc[-1]:
         return "BUY", data
     elif last["MA20"] < last["MA50"]:
         return "SELL", data
